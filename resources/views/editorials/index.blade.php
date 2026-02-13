@@ -43,14 +43,27 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white"><h5 class="modal-title font-weight-bold">Confirmar Borrado</h5></div>
-            <div class="modal-body text-center py-4">¿Deseas eliminar la editorial con ID: <strong id="idEditorial" class="text-danger"></strong>?</div>
-            <div class="modal-footer bg-light justify-content-center">
-                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Cerrar</button>
-                <a href="" id="btnConfirmarBorrar" class="btn btn-danger px-4 shadow-sm">Borrar</a>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <p class="h5">¿Seguro que deseas eliminar la editorial?</p>
+                <h4 id="nombreEditorial" class="text-danger font-weight-bold"></h4>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Eliminar Ahora</button>
+                </form>
             </div>
         </div>
     </div>
