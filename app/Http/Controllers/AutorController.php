@@ -30,7 +30,6 @@ class AutorController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-            // Crear el Usuario vinculado con rol autor
             $user = User::create([
                 'name' => $request->input('nombre'),
                 'email' => $request->input('email'),
@@ -38,26 +37,31 @@ class AutorController extends Controller
                 'role' => 'autor',
             ]);
 
-            // Crear el registro en la tabla autors
             $autor = new Autor();
             $autor->user_id = $user->id; 
             $autor->nombre = $request->input('nombre');
             $autor->email = $request->input('email');
             $autor->resenia = $request->input('resenia');
-            $autor->status = 1;
-            $autor->role = 'autor';
-    
+
             if ($request->hasFile('imagen')) {
                 $file = $request->file('imagen');
+                $destinatinoPath = 'img/autors/';
                 $filename = time() . '-' . $file->getClientOriginalName();
-                $file->move('img/autors/', $filename);
+                $uploadSuccess = $request->file('imagen')->move($destinatinoPath, $filename);
                 $autor->imagen = $filename;
             }
 
             $autor->save();
         });
 
-        return redirect()->route('autors.index')->with('message', 'Autor y Usuario creados correctamente');
+        return redirect()->route('autors.index')->with('message', 'Autor creado exitosamente');
+    }
+
+    // Método Show agregado para ver los detalles del autor
+    public function show($id)
+    {
+        $autor = Autor::findOrFail($id);
+        return view('autors.show', compact('autor'));
     }
 
     public function edit($id)
@@ -79,13 +83,6 @@ class AutorController extends Controller
             $autor->nombre = $request->input('nombre');
             $autor->email = $request->input('email');
             $autor->resenia = $request->input('resenia');
-
-            if ($request->hasFile('imagen')) {
-                $file = $request->file('imagen');
-                $filename = time() . '-' . $file->getClientOriginalName();
-                $file->move('img/autors/', $filename);
-                $autor->imagen = $filename;
-            }
             $autor->save();
 
             $user = User::find($autor->user_id);
@@ -108,6 +105,7 @@ class AutorController extends Controller
         return redirect()->route('autors.index')->with('message', 'Autor eliminado correctamente');
     }
 
+    // Método cargarDT modificado con los botones de acción en estilo outline
     private function cargarDT($consulta)
     {
         $datos = [];
@@ -115,17 +113,29 @@ class AutorController extends Controller
             $actualizar = route('autors.edit', $value['id']);
             
             $foto = ($value['imagen']) 
-                ? '<img src="'.asset('img/autors/'.$value['imagen']).'" width="50px" class="img-circle">' 
-                : 'Sin foto';
+                ? '<img src="'.asset('img/autors/'.$value['imagen']).'" width="50px" class="img-circle border shadow-sm">' 
+                : '<span class="text-muted">Sin foto</span>';
 
-            // Nota: Para la Imagen 3836a3, asegúrate de usar {!! !!} en la vista
+            // Botones corregidos: Sin duplicados y con estilo btn-outline (blancos con borde)
             $acciones = '
-                <div class="btn-group">
-                    <a href="' . $actualizar . '" class="btn btn-sm btn-success" title="Actualizar"><i class="far fa-edit"></i></a>
-                    <button class="btn btn-sm btn-danger" onclick="modal(' . $value['id'] . ', \'' . $value['nombre'] . '\')" data-toggle="modal" data-target="#deleteModal"><i class="far fa-trash-alt"></i></button>
+                <div class="btn-group shadow-sm">
+                    <a href="' . $actualizar . '" class="btn btn-sm btn-outline-warning mx-1" title="Editar">
+                        <i class="far fa-edit"></i>
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger" 
+                            onclick="modal(' . $value['id'] . ', \'' . $value['nombre'] . '\')" 
+                            data-toggle="modal" data-target="#deleteModal" title="Eliminar">
+                        <i class="far fa-trash-alt"></i>
+                    </button>
                 </div>';
 
-            $datos[$key] = [$acciones, $value['id'], $value['nombre'], $value['email'], $foto];
+            $datos[$key] = [
+                $acciones,
+                $value['id'],
+                $value['email'],
+                $value['nombre'],
+                $foto
+            ];
         }
         return $datos;
     }
