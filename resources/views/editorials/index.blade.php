@@ -62,7 +62,7 @@
                 <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Eliminar Ahora</button>
+                <button type="submit" class="btn btn-danger">Eliminar Ahora</button>
                 </form>
             </div>
         </div>
@@ -72,11 +72,11 @@
 
 @section('js')
 <script>
-    function modal(id) {
-        $('#idEditorial').html(id);
-        let url = "{{ route('deleteEditorial', ':id') }}";
-        url = url.replace(':id', id);
-        document.getElementById('btnConfirmarBorrar').href = url;
-    }
+    function modal(id, nombre) {
+    document.getElementById('nombreEditorial').innerText = nombre;
+    let url = "{{ route('editorials.destroy', ':id') }}";
+    url = url.replace(':id', id);
+    document.getElementById('deleteForm').setAttribute('action', url);
+}
 </script>
 @endsection
