@@ -11,4 +11,9 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    
+    server: {
+        port: 3000,
+        strictPort: true,
+    },
 });
