@@ -21,7 +21,13 @@
             <tbody>
                 @foreach($libros as $libro)
                 <tr>
-                    <td>{!! $libro[0] !!}</td>
+                    <td>
+                        {{-- Botón de Ver --}}
+                        <a href="{{ route('libros.show', $libro[1]) }}" class="btn btn-info" title="Ver Detalles">
+                            <i class="far fa-eye"></i>
+                        </a>
+                        {!! $libro[0] !!}
+                    </td>
                     <td>{{ $libro[1] }}</td>
                     <td>{{ $libro[2] }}</td>
                     <td>{{ $libro[3] }}</td>

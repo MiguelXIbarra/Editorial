@@ -24,10 +24,8 @@
                 <hr>
                 <p><strong>ISBN:</strong> {{ $libro->isbn }}</p>
                 
-                {{-- Mostramos datos del Autor usando la relación --}}
+                {{-- Uso de relaciones definidas en el modelo --}}
                 <p><strong>Autor:</strong> {{ $libro->autor->nombre ?? 'Sin Autor asignado' }}</p>
-                
-                {{-- Mostramos datos de la Editorial usando la relación --}}
                 <p><strong>Editorial:</strong> {{ $libro->editorial->name ?? 'Sin Editorial asignada' }}</p>
                 
                 <p><strong>Registrado por (Rol):</strong> <span class="badge badge-info">{{ $libro->role }}</span></p>

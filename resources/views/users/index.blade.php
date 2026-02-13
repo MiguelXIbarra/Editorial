@@ -26,6 +26,10 @@
                 @foreach($users as $user)
                 <tr>
                     <td>
+                        {{-- Botón de Ver --}}
+                        <a href="{{ route('users.show', $user->id) }}" class="btn btn-info" title="Ver Detalles">
+                            <i class="far fa-eye"></i>
+                        </a>
                         <a href="{{ route('users.edit', $user->id) }}" class="btn btn-success">
                             <i class="far fa-edit"></i>
                         </a>

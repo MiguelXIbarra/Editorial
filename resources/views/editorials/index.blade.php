@@ -31,6 +31,10 @@
                 @foreach($editorials as $editorial)
                 <tr>
                     <td>
+                        {{-- Botón de Ver --}}
+                        <a href="{{ route('editorials.show', $editorial[1]) }}" class="btn btn-info" title="Ver Detalles">
+                            <i class="far fa-eye"></i>
+                        </a>
                         <a href="{{ route('editorials.edit', $editorial[1]) }}" class="btn btn-success">
                             <i class="far fa-edit"></i>
                         </a>

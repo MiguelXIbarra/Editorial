@@ -30,12 +30,16 @@
             <tbody>
                 @foreach($autores as $autor)
                 <tr>
-                    {{-- Cambiado a {!! !!} para renderizar el HTML de los botones --}}
-                    <td>{!! $autor[0] !!}</td> 
+                    <td>
+                        {{-- Botón de Ver --}}
+                        <a href="{{ route('autors.show', $autor[1]) }}" class="btn btn-info" title="Ver Detalles">
+                            <i class="far fa-eye"></i>
+                        </a>
+                        {!! $autor[0] !!}
+                    </td> 
                     <td>{{ $autor[1] }}</td>
                     <td>{{ $autor[3] }}</td>
                     <td>{{ $autor[2] }}</td>
-                    {{-- Cambiado a {!! !!} para mostrar la etiqueta <img> procesada --}}
                     <td>{!! $autor[4] !!}</td>
                 </tr>
                 @endforeach
