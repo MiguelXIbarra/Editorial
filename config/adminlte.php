@@ -197,7 +197,7 @@ return [
     'classes_content_header' => '',
     'classes_content' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
-    'classes_sidebar_nav' => '',
+    'classes_sidebar_nav' => 'nav-flat nav-legacy',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
@@ -316,16 +316,60 @@ return [
             'text' => 'search',
         ],
         [
-            'text' => 'blog',
-            'url' => 'admin/blog',
-            'can' => 'manage-blog',
+            'text' => 'Usuarios',
+            'icon' => 'fas fa-fw fa-users',
+            'submenu' => [
+                [
+                    'text' => 'Listar Usuarios',
+                    'route' => 'users.index',
+                ],
+                [
+                    'text' => 'Crear Usuario',
+                    'route' => 'users.create',
+                ],
+            ],
         ],
         [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
+            'text' => 'Editoriales',
+            'icon' => 'fas fa-fw fa-building',
+            'submenu' => [
+                [
+                    'text' => 'Listar',
+                    'route' => 'editorials.index',
+                ],
+                [
+                    'text' => 'Crear',
+                    'route' => 'editorials.create',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Autores',
+            'icon' => 'fas fa-fw fa-user-tie',
+            'submenu' => [
+                [
+                    'text' => 'Listar',
+                    'route' => 'autors.index',
+                ],
+                [
+                    'text' => 'Crear',
+                    'route' => 'autors.create',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Libros',
+            'icon' => 'fas fa-fw fa-book',
+            'submenu' => [
+                [
+                    'text' => 'Listar',
+                    'route' => 'libros.index',
+                ],
+                [
+                    'text' => 'Crear',
+                    'route' => 'libros.create',
+                ],
+            ],
         ],
         ['header' => 'account_settings'],
         [
@@ -337,44 +381,6 @@ return [
             'text' => 'change_password',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-lock',
-        ],
-        [
-            'text' => 'multilevel',
-            'icon' => 'fas fa-fw fa-share',
-            'submenu' => [
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                    'submenu' => [
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                        ],
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                            'submenu' => [
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-            ],
         ],
         ['header' => 'labels'],
         [
