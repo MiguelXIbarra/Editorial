@@ -313,7 +313,7 @@ return [
         // Sidebar items:
         [
             'type' => 'sidebar-menu-search',
-            'text' => 'search',
+            'text' => 'Buscar   ',
         ],
         [
             'text' => 'Usuarios',
@@ -371,14 +371,14 @@ return [
                 ],
             ],
         ],
-        ['header' => 'account_settings'],
+        ['header' => 'AJUSTES DE CUENTA'],
         [
-            'text' => 'profile',
+            'text' => 'Perfil',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
-            'text' => 'change_password',
+            'text' => 'Cambiar Contraseña',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-lock',
         ],
