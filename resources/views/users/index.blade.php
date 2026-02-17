@@ -1,87 +1,119 @@
 @extends('adminlte::page')
 
-@section('title', 'Usuarios del Sistema')
+@section('title', 'Gestión de Usuarios')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="text-dark font-weight-bold">Usuarios del Sistema</h1>
-        <a href="{{ route('users.create') }}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-user-plus mr-1"></i> Registrar Usuario
-        </a>
-    </div>
+    <h1>Gestión de Usuarios</h1>
 @stop
 
 @section('content')
-<div class="card card-outline card-primary shadow-sm">
-    <div class="card-header bg-white">
-        <h3 class="card-title font-weight-bold">Listado General</h3>
+<div class="card shadow">
+    <div class="card-header">
+        <h3 class="card-title">Listado de Personal</h3>
+        <div class="card-tools">
+            <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-user-plus mr-1"></i> Registrar Usuario
+            </a>
+        </div>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover table-valign-middle mb-0">
-            <thead class="bg-light">
-                <tr>
-                    <th class="border-top-0">Nombre</th>
-                    <th class="border-top-0">Email</th>
-                    <th class="border-top-0 text-center">Rol</th>
-                    <th class="border-top-0 text-right pr-4">Acciones</th>
+    <div class="card-body">
+        <table id="tablaUsuarios" class="table table-bordered table-striped table-hover">
+            <thead>
+                <tr class="text-center">
+                    <th width="120px">Acciones</th>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Foto</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($users as $user)
                 <tr>
-                    <td class="font-weight-bold">{{ $user->name }}</td>
-                    <td class="text-muted">{{ $user->email }}</td>
-                    <td class="text-center">
-                        {{-- CAMBIO: Ahora todos los roles usan el fondo azul primario --}}
-                        <span class="badge badge-primary px-3 py-2 shadow-sm" style="min-width: 100px;">
-                            {{ strtoupper($user->role) }}
-                        </span>
-                    </td>
-                    <td class="text-right pr-4">
-                        <div class="btn-group shadow-sm">
-                            <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-info btn-sm" title="Ver"><i class="fas fa-eye"></i></a>
-                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-outline-warning btn-sm mx-1" title="Editar"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-outline-danger btn-sm" onclick="confirmarBorrado('{{ $user->id }}', '{{ $user->name }}')" data-toggle="modal" data-target="#deleteModal" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </td>
+                    {{-- Acciones (botones de ver, editar y borrar) --}}
+                    <td class="text-center">{!! $user[0] !!}</td>
+                    
+                    {{-- ID --}}
+                    <td class="text-center">{{ $user[1] }}</td>
+                    
+                    {{-- Nombre --}}
+                    <td>{{ $user[2] }}</td>
+                    
+                    {{-- Email --}}
+                    <td>{{ $user[3] }}</td>
+                    
+                    {{-- Rol (Badge uniforme) --}}
+                    <td class="text-center">{!! $user[4] !!}</td>
+                    
+                    {{-- Foto (Circular con object-fit: top) --}}
+                    <td class="text-center">{!! $user[5] !!}</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
-</div>
+    </div>
 
-{{-- Modal de Borrado limpio --}}
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title font-weight-bold">Confirmar Eliminación</h5>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-user-times mr-2"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="modal-body text-center py-4">
+            <div class="modal-body text-center">
                 <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                <p class="h5">¿Seguro que deseas eliminar al usuario <br><strong id="userName" class="text-danger"></strong>?</p>
+                <p class="h5">¿Seguro que deseas eliminar al usuario?</p>
+                <h4 id="nombreUsuario" class="text-danger font-weight-bold"></h4>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
             </div>
-            <div class="modal-footer bg-light justify-content-center">
-                <form id="deleteForm" action="" method="POST">
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger px-4 shadow-sm">Eliminar Ahora</button>
+                    <button type="submit" class="btn btn-danger px-4">Eliminar Ahora</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-@endsection
+@stop
 
 @section('js')
 <script>
-    function confirmarBorrado(id, name) {
-        $('#userName').text(name);
+    /**
+     * Función para cargar los datos del usuario en el modal de borrado
+     * @param {number} id - ID del usuario
+     * @param {string} nombre - Nombre completo del usuario
+     */
+    function modal(id, nombre) {
+        // Mostramos el nombre en el modal para confirmar
+        document.getElementById('nombreUsuario').innerText = nombre;
+        
+        // Construimos la URL de eliminación dinámicamente
         let url = "{{ route('users.destroy', ':id') }}";
         url = url.replace(':id', id);
-        $('#deleteForm').attr('action', url);
+        
+        // Asignamos la URL al formulario del modal
+        document.getElementById('deleteForm').setAttribute('action', url);
     }
+
+    // Inicialización de DataTable si lo usas
+    $(function () {
+        $("#tablaUsuarios").DataTable({
+            "responsive": true, 
+            "lengthChange": false, 
+            "autoWidth": false,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+            }
+        });
+    });
 </script>
-@endsection
+@stop
