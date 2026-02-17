@@ -20,15 +20,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Gestión de Editoriales
     Route::resource('editorials', EditorialController::class)->middleware('auth');
-    Route::get('/delete-editorial/{editorial_id}', [EditorialController::class, 'deleteEditorial'])->name('deleteEditorial')->middleware('auth');
+    Route::delete('/editorial/{id}', [EditorialController::class, 'deleteEditorial'])->name('editorials.delete')->middleware('auth');
 
     // Gestión de Autores
     Route::resource('autors', AutorController::class)->middleware('auth');
-    Route::get('/delete-autor/{autor_id}', [AutorController::class, 'deleteAutor'])->name('deleteAutor')->middleware('auth');
-
+    Route::delete('/autors/{id}', [AutorController::class, 'autorDelete'])->name('autors.delete')->middleware('auth');
     // Gestión de Libros
     Route::resource('libros', LibroController::class)->middleware('auth');
-    Route::get('/delete-libro/{id}', [LibroController::class, 'deleteLibro'])->name('deleteLibro')->middleware('auth');
+    Route::delete('/libros/{id}', [LibroController::class, 'deleteLibro'])->name('libros.delete')->middleware('auth');
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
