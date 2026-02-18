@@ -63,8 +63,8 @@
 @section('js')
 <script>
     function modal(id, nombre) {
-        document.getElementById('nombreAutor').innerText = nombre;
-        let url = "{{ route('autors.delete', ':id') }}";
+        $('#nombreAutor').html(nombre);
+        let url = "{{ route('autors.destroy', ':id') }}";
         url = url.replace(':id', id);
         document.getElementById('deleteForm').setAttribute('action', url);
     }
