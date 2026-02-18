@@ -75,7 +75,7 @@
 <script>
     function modal(id, titulo) {
         $('#nombreLibro').html(titulo);
-        let url = "{{ route('deleteLibro', ':id') }}";
+        let url = "{{ route('libros.destroy', ':id') }}";
         url = url.replace(':id', id);
         document.getElementById('btnConfirmarBorrar').href = url;
     }

@@ -69,7 +69,7 @@
 <script>
     function modal(id, nombre) {
         $('#nombreAutor').html(nombre);
-        let url = "{{ route('deleteAutor', ':id') }}";
+        let url = "{{ route('autors.destroy', ':id') }}";
         url = url.replace(':id', id);
         document.getElementById('btnConfirmarBorrar').href = url;
     }
