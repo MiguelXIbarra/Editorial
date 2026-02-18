@@ -58,15 +58,20 @@
     <div class="col-md-5">
         <div class="card card-outline card-primary shadow">
             <div class="card-body p-0">
-                <div class="profile-container">
-                    <img src="{{ $user->foto ? asset('img/users/'.$user->foto) : asset('img/default-user.png') }}" 
-                         alt="Foto de perfil">
-                    
+                <div class="profile-container shadow-sm"
+                    style="background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
+                    @if($user->foto)
+                        <img src="{{ asset('img/users/' . $user->foto) }}" alt="Foto de perfil">
+                    @else
+                        <div class="text-center text-muted">
+                            <i class="fas fa-user-circle fa-5x mb-2" style="opacity: 0.3;"></i>
+                            <h5 class="font-weight-bold">SIN FOTO DE PERFIL</h5>
+                        </div>
+                    @endif
+                
                     <div class="profile-info-overlay">
                         <h3>{{ $user->name }}</h3>
-                        <div class="role-badge">
-                            {{ $user->role }}
-                        </div>
+                        <div class="role-badge">{{ $user->role }}</div>
                     </div>
                 </div>
 

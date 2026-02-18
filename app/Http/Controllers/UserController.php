@@ -56,34 +56,42 @@ class UserController extends Controller
         return view('users.edit', compact('user'));
     }
 
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        
-        $this->validate($request, [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'foto' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-        ]);
+public function update(Request $request, $id)
+{
+    $user = User::findOrFail($id);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->role = $request->role;
-
-        if ($request->password) {
-            $user->password = Hash::make($request->password);
-        }
-
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $filename = time() . '-user-' . $file->getClientOriginalName();
-            $file->move(public_path('img/users/'), $filename);
-            $user->foto = $filename;
-        }
-
-        $user->save();
-        return redirect()->route('users.index')->with('message', 'Usuario actualizado');
+    if ($request->borrar_foto == "1") {
+        $user->foto = null;
+        $user->crop_data = null;
     }
+
+    if ($request->cropped_image) {
+        $data = $request->cropped_image;
+        if (preg_match('/^data:image\/(\w+);base64,/', $data)) {
+            $data = substr($data, strpos($data, ',') + 1);
+            $data = base64_decode($data);
+            $fileName = time() . '_user_' . $user->id . '.jpg';
+
+            file_put_contents(public_path('img/users/') . $fileName, $data);
+
+            if ($request->hasFile('foto')) {
+                $path = public_path('img/users/originals/');
+                if (!file_exists($path)) mkdir($path, 0777, true);
+                $request->file('foto')->move($path, $fileName);
+            }
+            $user->foto = $fileName;
+            $user->crop_data = $request->crop_data;
+        }
+    }
+
+    $user->name = $request->name;
+    $user->email = $request->email;
+    $user->role = $request->role; //
+    if($request->password) $user->password = Hash::make($request->password);
+    
+    $user->save();
+    return redirect()->route('users.index');
+}
 
     private function cargarDT($consulta)
     {
@@ -96,8 +104,14 @@ class UserController extends Controller
                 '<span class="badge badge-info">' . strtoupper($value['role']) . '</span>';
 
             $foto = ($value['foto']) 
-                ? '<img src="'.asset('img/users/'.$value['foto']).'" width="40px" class="img-circle border shadow-sm">' 
-                : '<span class="badge badge-secondary">Sin foto</span>';
+            ? '<img src="'.asset('img/users/'.$value['foto']).'" 
+                    class="img-circle elevation-2" 
+                    style="width: 45px; height: 45px; object-fit: cover; object-position: top; border: 2px solid #fff;">' 
+            : '<div class="text-center">
+                    <span class="badge badge-secondary p-2" style="border-radius: 20px; font-size: 0.7rem;">
+                        <i class="fas fa-user-slash mr-1"></i> SIN FOTO
+                    </span>
+               </div>';
 
             $acciones = '
                 <div class="btn-group">
