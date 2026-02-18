@@ -6,20 +6,28 @@ use App\Models\Libro;
 use App\Models\Autor;
 use App\Models\Editorial;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LibroController extends Controller
 {
     public function index()
     {
-        $libros = Libro::where('status', 1)->get();
+        // Traemos las relaciones para mostrar nombres en lugar de IDs
+        $libros = Libro::where('status', 1)->with(['autor', 'editorial'])->get();
         return view('libros.index', ['libros' => $this->cargarDT($libros)]);
+    }
+
+    public function show($id)
+    {
+        // Usamos 'with' para traer las relaciones y no tener errores de carga
+        $libro = Libro::with(['autor', 'editorial'])->findOrFail($id);
+        return view('libros.show', compact('libro'));
     }
 
     public function create()
     {
         $autores = Autor::where('status', 1)->get();
-        $editoriales = Editorial::where('status', 1)->get();
+        $editoriales = Editorial::all();
         return view('libros.create', compact('autores', 'editoriales'));
     }
 
@@ -27,70 +35,69 @@ class LibroController extends Controller
     {
         $this->validate($request, [
             'titulo' => 'required|min:3',
-            'isbn' => 'required|unique:libros',
-            'autor_id' => 'required',
-            'editorial_id' => 'required',
-            'portada' => 'nullable|image|mimes:jpg,png,jpeg|max:2048' // Cambiado a nullable
+            'autor_id' => 'required|exists:autors,id',
+            'editorial_id' => 'required|exists:editorials,id',
+            'portada' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'archivo_pdf' => 'nullable|mimes:pdf|max:10240',
         ]);
 
-        $libro = new Libro();
-        $libro->titulo = $request->input('titulo');
-        $libro->isbn = $request->input('isbn');
-        $libro->autor_id = $request->input('autor_id');
-        $libro->editorial_id = $request->input('editorial_id');
+        $libro = new Libro($request->all());
         $libro->status = 1;
-        $libro->role = Auth::user()->role; 
 
         if ($request->hasFile('portada')) {
             $file = $request->file('portada');
-            $filename = time() . '-' . $file->getClientOriginalName();
-            $file->move('img/portadas/', $filename);
+            $filename = time() . '-portada-' . $file->getClientOriginalName();
+            $file->move(public_path('img/libros/'), $filename);
             $libro->portada = $filename;
-        } else {
-            $libro->portada = null; // Aseguramos que guarde null si no hay archivo
+        }
+
+        if ($request->hasFile('archivo_pdf')) {
+            $file = $request->file('archivo_pdf');
+            $filename = time() . '-pdf-' . $file->getClientOriginalName();
+            $file->move(public_path('pdf/libros/'), $filename);
+            $libro->archivo_pdf = $filename;
         }
 
         $libro->save();
-
-        return redirect()->route('libros.index')->with('message', 'Libro guardado correctamente');
+        return redirect()->route('libros.index')->with('message', 'Libro registrado con éxito');
     }
 
-    public function show(string $id)
-    {
-        $libro = Libro::with(['autor', 'editorial'])->findOrFail($id);
-        return view('libros.show', compact('libro'));
-    }
-
-    public function edit(string $id)
+    public function edit($id)
     {
         $libro = Libro::findOrFail($id);
         $autores = Autor::where('status', 1)->get();
-        $editoriales = Editorial::where('status', 1)->get();
+        $editoriales = Editorial::all();
         return view('libros.edit', compact('libro', 'autores', 'editoriales'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $this->validate($request, [
-            'titulo' => 'required',
-            'portada' => 'nullable|image|mimes:jpg,png,jpeg|max:2048'
-        ]);
-
         $libro = Libro::findOrFail($id);
         
+        $this->validate($request, [
+            'titulo' => 'required|min:3',
+            'portada' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'archivo_pdf' => 'nullable|mimes:pdf|max:10240',
+        ]);
+
+        $libro->fill($request->all());
+
         if ($request->hasFile('portada')) {
             $file = $request->file('portada');
-            $filename = time() . '-' . $file->getClientOriginalName();
-            $file->move('img/portadas/', $filename);
+            $filename = time() . '-portada-' . $file->getClientOriginalName();
+            $file->move(public_path('img/libros/'), $filename);
             $libro->portada = $filename;
         }
 
-        $libro->titulo = $request->input('titulo');
-        $libro->autor_id = $request->input('autor_id');
-        $libro->editorial_id = $request->input('editorial_id');
-        $libro->save();
+        if ($request->hasFile('archivo_pdf')) {
+            $file = $request->file('archivo_pdf');
+            $filename = time() . '-pdf-' . $file->getClientOriginalName();
+            $file->move(public_path('pdf/libros/'), $filename);
+            $libro->archivo_pdf = $filename;
+        }
 
-        return redirect()->route('libros.index')->with('message', 'Libro actualizado');
+        $libro->save();
+        return redirect()->route('libros.index')->with('message', 'Libro actualizado correctamente');
     }
 
     public function deleteLibro($id)
@@ -98,28 +105,32 @@ class LibroController extends Controller
         $libro = Libro::findOrFail($id);
         $libro->status = 0;
         $libro->save();
-        return redirect()->route('libros.index')->with("message", "Libro eliminado");
+        return redirect()->route('libros.index')->with('message', 'Libro eliminado');
     }
 
     private function cargarDT($consulta)
     {
         $datos = [];
         foreach ($consulta as $key => $value) {
-            $actualizar = route('libros.edit', $value['id']);
-            $ver = route('libros.show', $value['id']);
-            
-            $foto = ($value['portada']) 
-                ? '<img src="'.asset('img/portadas/'.$value['portada']).'" width="40px" class="img-thumbnail">' 
-                : 'Sin portada';
-
             $acciones = '
                 <div class="btn-group">
-                    <a href="' . $ver . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                    <a href="' . $actualizar . '" class="btn btn-sm btn-success"><i class="far fa-edit"></i></a>
-                    <button class="btn btn-sm btn-danger" onclick="modal(' . $value['id'] . ', \'' . $value['titulo'] . '\')" data-toggle="modal" data-target="#deleteModal"><i class="far fa-trash-alt"></i></button>
+                    <a href="'.route('libros.show', $value['id']).'" class="btn btn-sm btn-outline-info"><i class="far fa-eye"></i></a>
+                    <a href="'.route('libros.edit', $value['id']).'" class="btn btn-sm btn-outline-warning mx-1"><i class="far fa-edit"></i></a>
+                    <button class="btn btn-sm btn-outline-danger" onclick="modal(' . $value['id'] . ', \'' . $value['titulo'] . '\')" data-toggle="modal" data-target="#deleteModal"><i class="far fa-trash-alt"></i></button>
                 </div>';
 
-            $datos[$key] = [$acciones, $value['id'], $value['titulo'], $foto, $value['isbn'], $value['role']];
+            $portada = ($value['portada']) 
+                ? '<img src="'.asset('img/libros/'.$value['portada']).'" width="45px" class="border shadow-sm">' 
+                : '<span class="badge badge-secondary">Sin portada</span>';
+
+            $datos[$key] = [
+                $acciones,
+                $value['id'],
+                $value['titulo'],
+                $value['autor']['nombre'], 
+                $value['editorial']['nombre'],
+                $portada
+            ];
         }
         return $datos;
     }
