@@ -81,46 +81,49 @@ class AutorController extends Controller
     public function update(Request $request, $id)
     {
         $autor = Autor::findOrFail($id);
-        
-        $this->validate($request, [
-            'nombre' => 'required|min:5',
-            'email' => 'required|email|unique:users,email,' . $autor->user_id,
-            'imagen' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'video'  => 'nullable|mimes:mp4,mov,ogg|max:20480',
-        ]);
 
-        DB::transaction(function () use ($request, $autor) {
-            $autor->nombre = $request->input('nombre');
-            $autor->email = $request->input('email');
-            $autor->resenia = $request->input('resenia');
+        // Borrado de imagen
+        if ($request->borrar_foto == "1") {
+            $autor->imagen = null;
+            $autor->crop_data = null;
+        }
 
-            if ($request->hasFile('imagen')) {
-                $file = $request->file('imagen');
-                $filename = time() . '-img-' . $file->getClientOriginalName();
-                $file->move(public_path('img/autors/'), $filename);
-                $autor->imagen = $filename;
+        // Procesamiento de imagen (Recorte y Original)
+        if ($request->cropped_image) {
+            $data = $request->cropped_image;
+            if (preg_match('/^data:image\/(\w+);base64,/', $data)) {
+                $data = substr($data, strpos($data, ',') + 1);
+                $data = base64_decode($data);
+                $fileName = time() . '_autor_' . $id . '.jpg';
+
+                // Asegurar que las carpetas existan para evitar Error 500
+                $mainPath = public_path('img/autors/');
+                $origPath = public_path('img/autors/originals/');
+                if (!file_exists($mainPath))
+                    mkdir($mainPath, 0777, true);
+                if (!file_exists($origPath))
+                    mkdir($origPath, 0777, true);
+
+                // 1. Guardar Recorte
+                file_put_contents($mainPath . $fileName, $data);
+
+                // 2. Guardar Original
+                if ($request->hasFile('imagen')) {
+                    $request->file('imagen')->move($origPath, $fileName);
+                }
+                $autor->imagen = $fileName;
+                $autor->crop_data = $request->crop_data;
             }
+        }
 
-            if ($request->hasFile('video')) {
-                $file = $request->file('video');
-                $filename = time() . '-vid-' . $file->getClientOriginalName();
-                $file->move(public_path('video/autors/'), $filename);
-                $autor->video = $filename;
-            }
-            
-            $autor->save();
+        $autor->nombre = $request->nombre;
+        $autor->email = $request->email;
+        $autor->resenia = $request->resenia;
+        $autor->save();
 
-            $user = User::find($autor->user_id);
-            if ($user) {
-                $user->name = $request->input('nombre');
-                $user->email = $request->input('email');
-                $user->save();
-            }
-        });
-
-        return redirect()->route('autors.index')->with('message', 'Autor actualizado correctamente');
+        return redirect()->route('autors.index');
     }
-
+    
     public function deleteAutor($id)
     {
         $autor = Autor::findOrFail($id);
