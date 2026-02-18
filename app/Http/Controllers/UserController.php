@@ -56,43 +56,56 @@ class UserController extends Controller
         return view('users.edit', compact('user'));
     }
 
-public function update(Request $request, $id)
-{
-    $user = User::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
 
-    if ($request->borrar_foto == "1") {
-        $user->foto = null;
-        $user->crop_data = null;
-    }
-
-    if ($request->cropped_image) {
-        $data = $request->cropped_image;
-        if (preg_match('/^data:image\/(\w+);base64,/', $data)) {
-            $data = substr($data, strpos($data, ',') + 1);
-            $data = base64_decode($data);
-            $fileName = time() . '_user_' . $user->id . '.jpg';
-
-            file_put_contents(public_path('img/users/') . $fileName, $data);
-
-            if ($request->hasFile('foto')) {
-                $path = public_path('img/users/originals/');
-                if (!file_exists($path)) mkdir($path, 0777, true);
-                $request->file('foto')->move($path, $fileName);
+        // Lógica de borrado sincronizado
+        if ($request->borrar_foto == "1") {
+            $user->foto = null;
+            $user->crop_data = null;
+            if ($user->role == 'autor' && $user->autor) {
+                $user->autor->update(['imagen' => null, 'crop_data' => null]);
             }
+        }
+
+        // Procesamiento de imagen en carpeta compartida 'profiles'
+        if ($request->cropped_image) {
+            $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->cropped_image));
+            $fileName = time() . '_profile_' . $user->id . '.jpg';
+
+            $path = public_path('img/profiles/');
+            if (!file_exists($path . 'originals/'))
+                mkdir($path . 'originals/', 0777, true);
+
+            file_put_contents($path . $fileName, $data);
+            if ($request->hasFile('foto')) {
+                $request->file('foto')->move($path . 'originals/', $fileName);
+            }
+
             $user->foto = $fileName;
             $user->crop_data = $request->crop_data;
+
+            // SINCRONIZACIÓN: Actualiza la tabla autors
+            if ($user->role == 'autor' && $user->autor) {
+                $user->autor->update([
+                    'imagen' => $fileName,
+                    'crop_data' => $request->crop_data
+                ]);
+            }
         }
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->role = $request->role;
+        if ($request->password)
+            $user->password = Hash::make($request->password);
+
+        $user->save();
+        return redirect()->route('users.index');
     }
 
-    $user->name = $request->name;
-    $user->email = $request->email;
-    $user->role = $request->role; //
-    if($request->password) $user->password = Hash::make($request->password);
     
-    $user->save();
-    return redirect()->route('users.index');
-}
-
     private function cargarDT($consulta)
     {
         $datos = [];
@@ -103,15 +116,7 @@ public function update(Request $request, $id)
             $rolLabel =
                 '<span class="badge badge-info">' . strtoupper($value['role']) . '</span>';
 
-            $foto = ($value['foto']) 
-            ? '<img src="'.asset('img/users/'.$value['foto']).'" 
-                    class="img-circle elevation-2" 
-                    style="width: 45px; height: 45px; object-fit: cover; object-position: top; border: 2px solid #fff;">' 
-            : '<div class="text-center">
-                    <span class="badge badge-secondary p-2" style="border-radius: 20px; font-size: 0.7rem;">
-                        <i class="fas fa-user-slash mr-1"></i> SIN FOTO
-                    </span>
-               </div>';
+         $foto = $value['foto'];
 
             $acciones = '
                 <div class="btn-group">

@@ -26,7 +26,7 @@
                             <div id="noPhotoPlaceholder" class="profile-user-img-edit d-flex align-items-center justify-content-center bg-no-photo {{ $user->foto ? 'd-none' : '' }}">
                                 <span class="text-muted small font-weight-bold">SIN FOTO</span>
                             </div>
-                            <img src="{{ $user->foto ? asset('img/users/' . $user->foto) : '' }}" id="mainPreview" class="profile-user-img-edit {{ !$user->foto ? 'd-none' : '' }}">
+                            <img src="{{ $user->foto ? asset('img/profiles/' . $user->foto) : '' }}" id="mainPreview" class="profile-user-img-edit {{ !$user->foto ? 'd-none' : '' }}">
                             <div class="overlay-edit-btn" onclick="$('#photoOptionsMenu').toggle()"><i class="fas fa-camera text-warning"></i></div>
                             
                             <div class="photo-options-menu shadow-lg" id="photoOptionsMenu">
@@ -109,14 +109,13 @@
     });
 
     $('#btnEditarPosicion').on('click', function() {
-        // PRIORIDAD: Si hay una imagen nueva en memoria, usa esa. Si no, busca la del servidor.
-        if (tempOriginalImage) {
-            imageToCrop.src = tempOriginalImage;
-        } else {
-            imageToCrop.src = "{{ asset('img/users/originals/') }}/" + "{{ $user->foto }}";
-        }
-        $('#cropperModal').modal('show');
-        $('#photoOptionsMenu').hide();
+    if (tempOriginalImage) {
+        imageToCrop.src = tempOriginalImage;
+    } else {
+        // CORRECCIÓN: Busca en la carpeta unificada profiles/originals
+        imageToCrop.src = "{{ asset('img/profiles/originals/') }}/" + "{{ $user->foto }}";
+    }
+    $('#cropperModal').modal('show');
     });
 
     $('#cropperModal').on('shown.bs.modal', function() {

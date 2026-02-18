@@ -58,10 +58,9 @@
     <div class="col-md-5">
         <div class="card card-outline card-primary shadow">
             <div class="card-body p-0">
-                <div class="profile-container shadow-sm"
-                    style="background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
+                <div class="profile-container shadow-sm" style="background-color: #e9ecef;">
                     @if($user->foto)
-                        <img src="{{ asset('img/users/' . $user->foto) }}" alt="Foto de perfil">
+                        <img src="{{ asset('img/profiles/' . $user->foto) }}" alt="Foto de perfil">
                     @else
                         <div class="text-center text-muted">
                             <i class="fas fa-user-circle fa-5x mb-2" style="opacity: 0.3;"></i>
@@ -74,7 +73,6 @@
                         <div class="role-badge">{{ $user->role }}</div>
                     </div>
                 </div>
-
                 <div class="p-3"> {{-- Reducimos el padding interno --}}
                     <ul class="list-group list-group-unbordered mb-2">
                         <li class="list-group-item" style="font-size: 0.9rem;">

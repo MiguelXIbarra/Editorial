@@ -82,37 +82,38 @@ class AutorController extends Controller
     {
         $autor = Autor::findOrFail($id);
 
-        // Borrado de imagen
+        // Borrado sincronizado
         if ($request->borrar_foto == "1") {
             $autor->imagen = null;
             $autor->crop_data = null;
+            if ($autor->user) {
+                $autor->user->update(['foto' => null, 'crop_data' => null]);
+            }
         }
 
-        // Procesamiento de imagen (Recorte y Original)
+        // Procesamiento en carpeta unificada 'profiles'
         if ($request->cropped_image) {
-            $data = $request->cropped_image;
-            if (preg_match('/^data:image\/(\w+);base64,/', $data)) {
-                $data = substr($data, strpos($data, ',') + 1);
-                $data = base64_decode($data);
-                $fileName = time() . '_autor_' . $id . '.jpg';
+            $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->cropped_image));
+            $fileName = time() . '_profile_auth_' . $id . '.jpg';
 
-                // Asegurar que las carpetas existan para evitar Error 500
-                $mainPath = public_path('img/autors/');
-                $origPath = public_path('img/autors/originals/');
-                if (!file_exists($mainPath))
-                    mkdir($mainPath, 0777, true);
-                if (!file_exists($origPath))
-                    mkdir($origPath, 0777, true);
+            $path = public_path('img/profiles/');
+            if (!file_exists($path . 'originals/'))
+                mkdir($path . 'originals/', 0777, true);
 
-                // 1. Guardar Recorte
-                file_put_contents($mainPath . $fileName, $data);
+            file_put_contents($path . $fileName, $data);
+            if ($request->hasFile('imagen')) {
+                $request->file('imagen')->move($path . 'originals/', $fileName);
+            }
 
-                // 2. Guardar Original
-                if ($request->hasFile('imagen')) {
-                    $request->file('imagen')->move($origPath, $fileName);
-                }
-                $autor->imagen = $fileName;
-                $autor->crop_data = $request->crop_data;
+            $autor->imagen = $fileName;
+            $autor->crop_data = $request->crop_data;
+
+            // SINCRONIZACIÓN: Actualiza la tabla users
+            if ($autor->user) {
+                $autor->user->update([
+                    'foto' => $fileName,
+                    'crop_data' => $request->crop_data
+                ]);
             }
         }
 
@@ -123,15 +124,6 @@ class AutorController extends Controller
 
         return redirect()->route('autors.index');
     }
-    
-    public function deleteAutor($id)
-    {
-        $autor = Autor::findOrFail($id);
-        $autor->status = 0;
-        $autor->save();
-
-        return redirect()->route('autors.index')->with('message', 'Autor eliminado correctamente');
-    }
 
     private function cargarDT($consulta)
     {
@@ -140,9 +132,7 @@ class AutorController extends Controller
             $actualizar = route('autors.edit', $value['id']);
             $ver = route('autors.show', $value['id']);
             
-            $foto = ($value['imagen']) 
-                ? '<img src="'.asset('img/autors/'.$value['imagen']).'" width="50px" class="img-circle border shadow-sm">' 
-                : '<span class="badge badge-secondary">Sin foto</span>';
+            $foto = $value['imagen'];
 
             $acciones = '
                 <div class="btn-group">
@@ -154,5 +144,14 @@ class AutorController extends Controller
             $datos[$key] = [$acciones, $value['id'], $value['nombre'], $value['email'], $foto];
         }
         return $datos;
+    }
+
+    public function destroy($id)
+    {
+        $autor = Autor::findOrFail($id);
+        $autor->status = 0;
+        $autor->save();
+
+        return redirect()->route('autors.index')->with('message', 'Autor eliminado correctamente');
     }
 }

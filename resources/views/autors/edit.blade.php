@@ -8,7 +8,6 @@
     .profile-user-img-edit { position: absolute; top: 0; left: 0; width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #ffc107; padding: 3px; background: #fff; }
     .overlay-edit-btn { position: absolute; bottom: 5px; right: 5px; background: #fff; border-radius: 50%; padding: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 20; }
     .photo-options-menu { display: none; position: absolute; top: 105%; left: 50%; transform: translateX(-50%); background: white; border: 1px solid #ddd; border-radius: 8px; z-index: 1050; width: 190px; }
-    .bg-no-photo { background-color: #f8f9fa; border: 2px dashed #ccc !important; }
     .cropper-view-box, .cropper-face { border-radius: 50%; }
 </style>
 @stop
@@ -26,7 +25,11 @@
                             <div id="noPhotoPlaceholder" class="profile-user-img-edit d-flex align-items-center justify-content-center bg-no-photo {{ $autor->imagen ? 'd-none' : '' }}">
                                 <span class="text-muted small font-weight-bold">SIN FOTO</span>
                             </div>
-                            <img src="{{ $autor->imagen ? asset('img/autors/' . $autor->imagen) : '' }}" id="mainPreview" class="profile-user-img-edit {{ !$autor->imagen ? 'd-none' : '' }}">
+                            {{-- Usamos asset('img/profiles/...') para mostrar la imagen sincronizada --}}
+                            <img src="{{ $autor->imagen ? asset('img/profiles/' . $autor->imagen) : '' }}" 
+                                 id="mainPreview" 
+                                 class="profile-user-img-edit {{ !$autor->imagen ? 'd-none' : '' }}">
+                            
                             <div class="overlay-edit-btn" onclick="$('#photoOptionsMenu').toggle()"><i class="fas fa-camera text-warning"></i></div>
                             
                             <div class="photo-options-menu shadow-lg" id="photoOptionsMenu">
@@ -69,6 +72,7 @@
     </div>
 </div>
 
+{{-- Modal de recorte --}}
 <div class="modal fade" id="cropperModal" tabindex="-1" role="dialog" data-backdrop="static">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
@@ -103,13 +107,13 @@
     });
 
     $('#btnEditarPosicion').on('click', function() {
-        if (tempOriginalImage) {
-            imageToCrop.src = tempOriginalImage;
-        } else {
-            imageToCrop.src = "{{ asset('img/autors/originals/') }}/" + "{{ $autor->imagen }}";
-        }
-        $('#cropperModal').modal('show');
-        $('#photoOptionsMenu').hide();
+    if (tempOriginalImage) {
+        imageToCrop.src = tempOriginalImage;
+    } else {
+        // CORRECCIÓN: Ruta unificada a profiles/originals
+        imageToCrop.src = "{{ asset('img/profiles/originals/') }}/" + "{{ $autor->imagen }}";
+    }
+    $('#cropperModal').modal('show');
     });
 
     $('#cropperModal').on('shown.bs.modal', function() {
