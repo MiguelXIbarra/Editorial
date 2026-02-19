@@ -12,10 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('libros', function (Blueprint $table) {
-            // Añadimos status para el borrado lógico
-            $table->integer('status')->default(1)->after('id');
-            // Añadimos role para registrar quién hizo el movimiento
-            $table->string('role')->nullable()->after('status');
+            if (!Schema::hasColumn('libros', 'status')) {
+                $table->integer('status')->default(1)->after('id');
+            }
+
+            if (!Schema::hasColumn('libros', 'role')) {
+                $table->string('role')->nullable()->after('status');
+            }
         });
     }
 
