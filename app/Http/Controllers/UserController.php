@@ -10,15 +10,14 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
-        // Cambiado de 'admin.users.index' a 'users.index'
-        return view('users.index', ['users' => $this->cargarDT($users)]);
+        $consulta = User::all();
+        $users = $this->cargarDT($consulta);
+        return view('users.index', compact('users'));
     }
 
     public function show($id)
     {
         $user = User::findOrFail($id);
-        // Cambiado de 'admin.users.show' a 'users.show'
         return view('users.show', compact('user'));
     }
 
@@ -29,25 +28,24 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'foto' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-        ]);
+        $user = new User();
+        $user->name = $request->input('nombre');
+        $user->email = $request->input('email');
+        $user->password = Hash::make('12345678');
+        $user->role = $request->input('role') ?? 'AUTOR';
+        $user->status = 1;
+        $user->save();
 
-        $user = new User($request->all());
-        $user->password = Hash::make($request->password);
-
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $filename = time() . '-user-' . $file->getClientOriginalName();
-            $file->move(public_path('img/users/'), $filename);
-            $user->foto = $filename;
+        if ($user->role == 'AUTOR') {
+            Autor::create([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'status' => 1
+            ]);
         }
 
-        $user->save();
-        return redirect()->route('users.index')->with('message', 'Usuario creado con éxito');
+        return redirect()->route('users.index');
     }
 
     public function edit($id)
@@ -60,16 +58,15 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Lógica de borrado sincronizado
         if ($request->borrar_foto == "1") {
-            $user->foto = null;
+            $user->image = null;
             $user->crop_data = null;
-            if ($user->role == 'autor' && $user->autor) {
-                $user->autor->update(['imagen' => null, 'crop_data' => null]);
+            if ($user->role == 'AUTOR' && $user->autor) {
+                $user->autor->update(['image' => null, 'crop_data' => null]);
             }
         }
 
-        // Procesamiento de imagen en carpeta compartida 'profiles'
+
         if ($request->cropped_image) {
             $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->cropped_image));
             $fileName = time() . '_profile_' . $user->id . '.jpg';
@@ -83,13 +80,12 @@ class UserController extends Controller
                 $request->file('foto')->move($path . 'originals/', $fileName);
             }
 
-            $user->foto = $fileName;
+            $user->image = $fileName;
             $user->crop_data = $request->crop_data;
 
-            // SINCRONIZACIÓN: Actualiza la tabla autors
-            if ($user->role == 'autor' && $user->autor) {
+            if ($user->role == 'AUTOR' && $user->autor) {
                 $user->autor->update([
-                    'imagen' => $fileName,
+                    'image' => $fileName,
                     'crop_data' => $request->crop_data
                 ]);
             }
@@ -105,27 +101,48 @@ class UserController extends Controller
         return redirect()->route('users.index');
     }
 
-    
+
     private function cargarDT($consulta)
     {
         $datos = [];
         foreach ($consulta as $key => $value) {
             $ver = route('users.show', $value['id']);
             $editar = route('users.edit', $value['id']);
+            $rolLabel = '<span class="badge badge-info">' . strtoupper($value['role']) . '</span>';
 
-            $rolLabel =
-                '<span class="badge badge-info">' . strtoupper($value['role']) . '</span>';
+            $nombreImagen = $value['image'];
+            $fotoHtml = '<span class="badge badge-secondary">SIN FOTO</span>';
 
-         $foto = $value['foto'];
+            if ($nombreImagen) {
+                $rutaAutor = 'img/autors/' . $nombreImagen;
+                $rutaPerfil = 'img/profiles/' . $nombreImagen;
+
+                $urlFinal = null;
+                if (file_exists(public_path($rutaAutor))) {
+                    $urlFinal = asset($rutaAutor);
+                } elseif (file_exists(public_path($rutaPerfil))) {
+                    $urlFinal = asset($rutaPerfil);
+                }
+
+                if ($urlFinal) {
+                    $fotoHtml = '<img src="' . $urlFinal . '" 
+                    style="width: 40px !important; 
+                           height: 40px !important; 
+                           object-fit: cover !important; 
+                           object-position: center !important; 
+                           border-radius: 50% !important; 
+                           border: 1px solid #dee2e6;">';
+                }
+            }
 
             $acciones = '
-                <div class="btn-group">
-                    <a href="' . $ver . '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="far fa-eye"></i></a>
-                    <a href="' . $editar . '" class="btn btn-sm btn-outline-warning mx-1" title="Editar"><i class="far fa-edit"></i></a>
-                    <button class="btn btn-sm btn-outline-danger" onclick="modal(' . $value['id'] . ', \'' . $value['name'] . '\')" data-toggle="modal" data-target="#deleteModal"><i class="far fa-trash-alt"></i></button>
-                </div>';
+            <div class="btn-group">
+                <a href="' . $ver . '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="far fa-eye"></i></a>
+                <a href="' . $editar . '" class="btn btn-sm btn-outline-warning mx-1" title="Editar"><i class="far fa-edit"></i></a>
+                <button class="btn btn-sm btn-outline-danger" onclick="modal(' . $value['id'] . ', \'' . $value['name'] . '\')" data-toggle="modal" data-target="#deleteModal"><i class="far fa-trash-alt"></i></button>
+            </div>';
 
-            $datos[$key] = [$acciones, $value['id'], $value['name'], $value['email'], $rolLabel, $foto];
+            $datos[$key] = [$acciones, $value['id'], $value['name'], $value['email'], $rolLabel, $fotoHtml];
         }
         return $datos;
     }
@@ -134,8 +151,12 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
+        if ($user->foto && file_exists(public_path('img/users/' . $user->foto))) {
+            unlink(public_path('img/users/' . $user->foto));
+        }
+
         $user->delete();
 
-        return redirect()->route('users.index')->with('message', 'Usuario eliminado correctamente');
-    }
+        return redirect()->route('users.index')->with('success', 'El usuario ha sido eliminado correctamente.');
+}
 }

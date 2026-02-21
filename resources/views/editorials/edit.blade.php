@@ -1,40 +1,46 @@
 @extends('adminlte::page')
 
+@section('title', 'Editar Editorial')
+
+@section('content_header')
+    <div class="bg-warning p-2 shadow-sm rounded">
+        <h5 class="mb-0 text-dark font-weight-bold"><i class="fas fa-edit mr-2"></i>Editar Editorial: {{ $editorial->name }}</h5>
+    </div>
+@stop
+
 @section('content')
-<div class="container">
-    <div class="row">
-        <h2>Editar Editorial</h2>
-        <form action="{{ route('editorials.update', $editorial->id) }}" method="post" class="col-lg-7">
+<div class="card card-outline card-warning shadow-sm mt-2">
+    <div class="card-body">
+        <form action="{{ route('editorials.update', $editorial->id) }}" method="POST">
             @csrf
             @method('PUT')
             
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul>
-                        @foreach($errors->all() as $error)
-                            <li>{{$error}}</li>
-                        @endforeach
-                    </ul>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="font-weight-bold text-secondary">Nombre de la Editorial</label>
+                        <input type="text" name="name" class="form-control" value="{{ $editorial->name }}" required>
+                    </div>
                 </div>
-            @endif
-
-            <div class="form-group">
-                <label for="name">Nombre</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{$editorial->name}}" />
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold text-secondary">Correo Electrónico</label>
+                        <input type="email" name="email" class="form-control" value="{{ $editorial->email }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold text-secondary">Domicilio</label>
+                        <input type="text" name="address" class="form-control" value="{{ $editorial->address }}" required>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="address">Domicilio</label>
-                <textarea class="form-control" id="address" name="address">{{$editorial->address}}</textarea>
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="submit" class="btn btn-warning px-4 font-weight-bold shadow-sm text-dark">Actualizar Editorial</button>
+                <a href="{{ route('editorials.index') }}" class="btn btn-light border px-4 shadow-sm text-secondary">Cancelar</a>
             </div>
-
-            <div class="form-group">
-                <label for="email">E-mail</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{$editorial->email}}" />
-            </div>
-
-            <button type="submit" class="btn btn-success">Actualizar Editorial</button>
         </form>
     </div>
 </div>
-@endsection
+@stop

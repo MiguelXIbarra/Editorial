@@ -4,20 +4,29 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
+return new class extends Migration {
+    public function up()
     {
-        Schema::table('autors', function (Blueprint $table) {
-            // Guardará las coordenadas JSON para re-editar la posición
-            $table->text('crop_data')->nullable()->after('imagen');
-        });
+        if (!Schema::hasColumn('autors', 'crop_data')) {
+            Schema::table('autors', function (Blueprint $table) {
+
+                if (Schema::hasColumn('autors', 'image')) {
+                    $table->text('crop_data')->nullable()->after('image');
+                } elseif (Schema::hasColumn('autors', 'imagen')) {
+                    $table->text('crop_data')->nullable()->after('imagen');
+                } else {
+                    $table->text('crop_data')->nullable();
+                }
+            });
+        }
     }
 
-    public function down(): void
+    public function down()
     {
-        Schema::table('autors', function (Blueprint $table) {
-            $table->dropColumn('crop_data');
-        });
+        if (Schema::hasColumn('autors', 'crop_data')) {
+            Schema::table('autors', function (Blueprint $table) {
+                $table->dropColumn('crop_data');
+            });
+        }
     }
 };

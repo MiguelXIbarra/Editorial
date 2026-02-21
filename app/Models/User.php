@@ -15,8 +15,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'foto', 
-        'crop_data' 
+        'status',
+        'image'
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -26,9 +26,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    /**
-     * Relación con Autor: Permite la sincronización de fotos
-     */
     public function autor(): HasOne
     {
         return $this->hasOne(Autor::class, 'user_id');

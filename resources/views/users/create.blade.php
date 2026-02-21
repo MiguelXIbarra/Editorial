@@ -11,8 +11,8 @@
         @csrf
         <div class="card-body">
             <div class="form-group">
-                <label>Nombre de Usuario</label>
-                <input type="text" name="name" class="form-control" placeholder="Ej. Juan Pérez" required>
+                <label>Nombre del Autor</label>
+                <input type="text" name="nombre" class="form-control" required>
             </div>
             <div class="form-group">
                 <label>Correo Electrónico</label>

@@ -1,46 +1,116 @@
 @extends('adminlte::page')
 
-@section('title', 'Perfil del Autor')
+@section('title', 'Perfil Detallado del Autor')
 
 @section('content')
-<div class="row">
-   <div class="col-md-4">
-        <div class="card card-primary card-outline">
-            <div class="card-body box-profile">
-                <div class="text-center">
-                    <img class="profile-user-img img-fluid img-circle"
-                        src="{{ $autor->imagen ? asset('img/profiles/' . $autor->imagen) : asset('img/profiles/default-user.png') }}"
-                        style="width: 150px; height: 150px; object-fit: cover;" alt="Foto del autor">
+<style>
+
+    .profile-container {
+        position: relative;
+        width: 100%;
+        height: 280px; 
+        overflow: hidden;
+        border-radius: 4px 4px 0 0;
+        background-color: #f4f6f9;
+    }
+
+    .profile-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; 
+        object-position: center; 
+    }
+
+    .profile-info-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 25px 15px 10px;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+        color: white;
+        text-align: center;
+    }
+
+    .profile-info-overlay h3 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+    }
+
+    .profile-info-overlay .role-badge {
+        display: inline-block;
+        margin-top: 5px;
+        padding: 2px 10px;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+</style>
+
+<div class="row pt-4">
+    <div class="col-md-5">
+        <div class="card card-outline card-primary shadow">
+            <div class="card-body p-0">
+                <div class="profile-container shadow-sm" style="background-color: #e9ecef;">
+                    @if($autor->image)
+                        <img src="{{ asset('img/autors/' . $autor->image) }}" alt="Foto de perfil">
+                    @else
+                        <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                            <i class="fas fa-user-circle fa-5x mb-2" style="opacity: 0.3;"></i>
+                            <h5 class="font-weight-bold">SIN FOTO DE PERFIL</h5>
+                        </div>
+                    @endif
+                
+                    <div class="profile-info-overlay">
+                        <h3>{{ $autor->name }}</h3>
+                        <div class="role-badge">AUTOR</div>
+                    </div>
                 </div>
-                <h3 class="profile-username text-center">{{ $autor->nombre }}</h3>
-                <p class="text-muted text-center">{{ $autor->email }}</p>
+                <div class="p-3">
+                    <ul class="list-group list-group-unbordered mb-2">
+                        <li class="list-group-item" style="font-size: 0.9rem;">
+                            <b>Email:</b> <span class="float-right text-muted">{{ $autor->email }}</span>
+                        </li>
+                        <li class="list-group-item" style="font-size: 0.9rem;">
+                            <b>ID Autor:</b> <span class="float-right text-muted">#{{ $autor->id }}</span>
+                        </li>
+                        <li class="list-group-item" style="font-size: 0.9rem;">
+                            <b>Registro:</b> <span class="float-right text-muted">{{ $autor->created_at->format('d/m/Y') }}</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="{{ route('autors.edit', $autor->id) }}" class="btn btn-warning btn-block btn-sm font-weight-bold">
+                        <i class="fas fa-edit mr-1"></i> Editar Datos
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header p-2">
-                <h3 class="card-title">Información Detallada</h3>
+    <div class="col-md-7">
+        <div class="card card-info shadow">
+            <div class="card-header">
+                <h3 class="card-title" style="font-size: 1rem;"><i class="fas fa-info-circle mr-1"></i> Reseña Biográfica</h3>
             </div>
             <div class="card-body">
-                <strong><i class="fas fa-book mr-1"></i> Reseña Biográfica</strong>
-                <p class="text-muted">{{ $autor->resenia ?? 'Sin reseña disponible.' }}</p>
+                <p style="font-size: 0.95rem; line-height: 1.6;" class="text-justify">
+                    {{ $autor->description ?? 'Este autor aún no cuenta con una reseña biográfica registrada.' }}
+                </p>
                 
-                <hr>
-
-                @if($autor->video)
-                <strong><i class="fas fa-video mr-1"></i> Video de Presentación</strong>
-                <div class="embed-responsive embed-responsive-16by9 mt-2">
-                    <video class="embed-responsive-item" controls>
-                        <source src="{{ asset('video/autors/' . $autor->video) }}" type="video/mp4">
-                        Tu navegador no soporta la reproducción de videos.
-                    </video>
+                <div class="callout callout-info mt-3" style="font-size: 0.9rem;">
+                    <h6><i class="fas fa-id-badge text-info"></i> Información de Cuenta</h6>
+                    <p class="text-muted mb-0">Este perfil está sincronizado con la cuenta de usuario. Los cambios de nombre o correo afectarán el inicio de sesión.</p>
                 </div>
-                @endif
             </div>
-            <div class="card-footer text-right">
-                <a href="{{ route('autors.index') }}" class="btn btn-secondary">Volver al listado</a>
+            <div class="card-footer text-right bg-white">
+                <a href="{{ route('autors.index') }}" class="btn btn-sm btn-outline-secondary px-3">
+                    Regresar
+                </a>
             </div>
         </div>
     </div>

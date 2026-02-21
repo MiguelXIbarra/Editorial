@@ -12,10 +12,12 @@ class AutorController extends Controller
 {
     public function index()
     {
-        $autores = Autor::where('status', 1)->get();
-        return view('autors.index', ['autores' => $this->cargarDT($autores)]);
-    }
+        $consulta = Autor::where('status', 1)->get();
 
+        $autors = $this->cargarDT($consulta);
+
+        return view('autors.index', compact('autors'));
+    }
     public function create()
     {
         return view('autors.create');
@@ -23,47 +25,33 @@ class AutorController extends Controller
 
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'nombre' => 'required|min:5',
-            'email' => 'required|email|unique:users,email',
-            'resenia' => 'nullable',
-            'imagen' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'video'  => 'nullable|mimes:mp4,mov,ogg|max:20480', // Máx 20MB
-        ]);
+        $user = new User();
+        $user->name = $request->input('nombre');
+        $user->email = $request->input('email');
+        $user->password = Hash::make('12345678');
+        $user->role = 'AUTOR';
+        $user->status = 1;
+        $user->save();
 
-        DB::transaction(function () use ($request) {
-            $user = User::create([
-                'name' => $request->input('nombre'),
-                'email' => $request->input('email'),
-                'password' => Hash::make('password123'),
-                'role' => 'autor',
-            ]);
+        $autor = new Autor();
+        $autor->user_id = $user->id;
+        $autor->name = $user->name;
+        $autor->email = $user->email;
+        $autor->status = 1;
 
-            $autor = new Autor();
-            $autor->user_id = $user->id; 
-            $autor->nombre = $request->input('nombre');
-            $autor->email = $request->input('email');
-            $autor->resenia = $request->input('resenia');
-            $autor->status = 1;
+        if ($request->hasFile('imagen')) {
+            $file = $request->file('imagen');
+            $filename = time() . '_orig_' . $user->id . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('img/autors/originals/'), $filename);
 
-            if ($request->hasFile('imagen')) {
-                $file = $request->file('imagen');
-                $filename = time() . '-img-' . $file->getClientOriginalName();
-                $file->move(public_path('img/autors/'), $filename);
-                $autor->imagen = $filename;
-            }
+            $autor->image = $filename;
+            
+            $user->image = $filename;
+            $user->save();
+        }
 
-            if ($request->hasFile('video')) {
-                $file = $request->file('video');
-                $filename = time() . '-vid-' . $file->getClientOriginalName();
-                $file->move(public_path('video/autors/'), $filename);
-                $autor->video = $filename;
-            }
-
-            $autor->save();
-        });
-
-        return redirect()->route('autors.index')->with('message', 'Autor y archivos guardados correctamente');
+        $autor->save();
+        return redirect()->route('autors.index');
     }
 
     public function show($id)
@@ -81,67 +69,72 @@ class AutorController extends Controller
     public function update(Request $request, $id)
     {
         $autor = Autor::findOrFail($id);
+        $autor->name = $request->input('nombre');
+        $autor->email = $request->input('email');
+        $autor->description = $request->input('resenia');
 
-        // Borrado sincronizado
-        if ($request->borrar_foto == "1") {
-            $autor->imagen = null;
-            $autor->crop_data = null;
-            if ($autor->user) {
-                $autor->user->update(['foto' => null, 'crop_data' => null]);
-            }
+        if ($request->input('cropped_image')) {
+            $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->input('cropped_image')));
+            $fileName = time() . '_crop_auth_' . $id . '.jpg';
+            file_put_contents(public_path('img/autors/' . $fileName), $data);
+            $autor->image = $fileName;
         }
 
-        // Procesamiento en carpeta unificada 'profiles'
-        if ($request->cropped_image) {
-            $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->cropped_image));
-            $fileName = time() . '_profile_auth_' . $id . '.jpg';
-
-            $path = public_path('img/profiles/');
-            if (!file_exists($path . 'originals/'))
-                mkdir($path . 'originals/', 0777, true);
-
-            file_put_contents($path . $fileName, $data);
-            if ($request->hasFile('imagen')) {
-                $request->file('imagen')->move($path . 'originals/', $fileName);
-            }
-
-            $autor->imagen = $fileName;
-            $autor->crop_data = $request->crop_data;
-
-            // SINCRONIZACIÓN: Actualiza la tabla users
-            if ($autor->user) {
-                $autor->user->update([
-                    'foto' => $fileName,
-                    'crop_data' => $request->crop_data
-                ]);
-            }
-        }
-
-        $autor->nombre = $request->nombre;
-        $autor->email = $request->email;
-        $autor->resenia = $request->resenia;
         $autor->save();
+
+        $user = User::find($autor->user_id);
+        if ($user) {
+            $user->name = $autor->name;
+            $user->email = $autor->email;
+            $user->image = $autor->image;
+            $user->save();
+        }
 
         return redirect()->route('autors.index');
     }
 
-    private function cargarDT($consulta)
+    private function cargarDT($consulta): array
     {
         $datos = [];
         foreach ($consulta as $key => $value) {
             $actualizar = route('autors.edit', $value['id']);
             $ver = route('autors.show', $value['id']);
-            
-            $foto = $value['imagen'];
+
+            $foto = $value['image']
+                ? '<img src="' . asset('img/autors/' . $value['image']) . '" class="img-circle elevation-1" style="width: 35px; height: 35px; object-fit: cover;">'
+                : '<span class="badge badge-secondary">SIN FOTO</span>';
 
             $acciones = '
-                <div class="btn-group">
-                    <a href="' . $ver . '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="far fa-eye"></i></a>
-                    <a href="' . $actualizar . '" class="btn btn-sm btn-outline-warning mx-1" title="Editar"><i class="far fa-edit"></i></a>
-                    <button class="btn btn-sm btn-outline-danger" onclick="modal(' . $value['id'] . ', \'' . $value['nombre'] . '\')" data-toggle="modal" data-target="#deleteModal"><i class="far fa-trash-alt"></i></button>
-                </div>';
+            <div class="btn-group">
+                <a href="' . route('autors.show', $value['id']) . '" 
+                class="btn btn-sm btn-outline-info" 
+                title="Ver Detalle">
+                <i class="far fa-eye"></i>
+                </a>
 
-            $datos[$key] = [$acciones, $value['id'], $value['nombre'], $value['email'], $foto];
+                <a href="' . route('autors.edit', $value['id']) . '" 
+                class="btn btn-sm btn-outline-warning mx-1" 
+                title="Editar">
+                <i class="far fa-edit"></i>
+                </a>
+
+                <button class="btn btn-sm btn-outline-danger" 
+                        onclick="modal(' . $value['id'] . ', \'' . addslashes($value['name']) . '\')" 
+                        data-toggle="modal" 
+                        data-target="#deleteModal" 
+                        title="Eliminar">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            </div>';
+
+            $datos[$key] = [
+                $acciones,
+                $value['id'],
+                $value['name'],
+                $value['email'],
+                '<span class="badge badge-info">AUTOR</span>',
+                $foto
+            ];
         }
         return $datos;
     }

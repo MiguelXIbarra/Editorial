@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Guardará las coordenadas JSON para re-editar la posición exacta
             $table->text('crop_data')->nullable()->after('foto');
         });
     }

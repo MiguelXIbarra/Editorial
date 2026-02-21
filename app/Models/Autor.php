@@ -3,27 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Autor extends Model
 {
-    // Permitir asignación masiva de todos los campos necesarios
+    use HasFactory;
+
+    protected $table = 'autors';
+
     protected $fillable = [
-        'nombre', 
-        'email', 
-        'resenia', 
-        'imagen', 
-        'status', 
-        'role', 
-        'user_id', 
+        'user_id',
+        'name',
+        'email',
+        'description',
+        'status',
+        'image',
+        'video',
         'crop_data'
     ];
 
-    /**
-     * Relación: Un Autor pertenece a un Usuario (vinculación por user_id).
-     */
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function libros()
+    {
+        return $this->hasMany(Libro::class, 'autor_id');
     }
 }

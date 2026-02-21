@@ -1,50 +1,41 @@
 @extends('adminlte::page')
 
-@section('title', 'Detalles de la Editorial')
+@section('title', 'Detalle de Editorial')
 
 @section('content_header')
-    <h1>Ficha de Editorial: {{ $editorial->name }}</h1>
+    <div class="bg-info p-2 shadow-sm rounded">
+        <h5 class="mb-0 text-white font-weight-bold"><i class="fas fa-eye mr-2"></i>Información de la Editorial</h5>
+    </div>
 @stop
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card card-info card-outline">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-building mr-1"></i> Datos Generales</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-sm-6">
-                        <strong><i class="fas fa-id-card mr-1"></i> ID de Registro</strong>
-                        <p class="text-muted">{{ $editorial->id }}</p>
-                    </div>
-                    <div class="col-sm-6">
-                        <strong><i class="fas fa-check-circle mr-1"></i> Estatus</strong>
-                        <p>
-                            @if($editorial->status == 1)
-                                <span class="badge badge-success">Activo</span>
-                            @else
-                                <span class="badge badge-danger">Inactivo</span>
-                            @endif
-                        </p>
-                    </div>
+<div class="card card-outline card-info shadow-sm mt-2">
+    <div class="card-body">
+        <div class="p-4 rounded shadow-xs" style="background: #f8f9fa; border-left: 5px solid #17a2b8; border: 1px solid #ddd; border-left-width: 5px;">
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="text-info small font-weight-bold uppercase mb-0">NOMBRE OFICIAL</label>
+                    <h2 class="font-weight-bold text-dark mb-4">{{ $editorial->name }}</h2>
                 </div>
-                <hr>
-                <strong><i class="fas fa-map-marker-alt mr-1"></i> Domicilio</strong>
-                <p class="text-muted">{{ $editorial->address }}</p>
-                <hr>
-                <strong><i class="fas fa-envelope mr-1"></i> Correo Electrónico</strong>
-                <p class="text-muted">{{ $editorial->email }}</p>
+                <div class="col-md-6 mb-3">
+                    <label class="text-secondary small font-weight-bold">CORREO ELECTRÓNICO</label>
+                    <p class="lead"><i class="fas fa-envelope text-info mr-2"></i>{{ $editorial->email }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-secondary small font-weight-bold">DOMICILIO FISCAL</label>
+                    <p class="lead"><i class="fas fa-map-marker-alt text-info mr-2"></i>{{ $editorial->address }}</p>
+                </div>
             </div>
-            <div class="card-footer">
-                <a href="{{ route('editorials.index') }}" class="btn btn-primary">
-                    <i class="fas fa-list"></i> Regresar a la lista
-                </a>
-                <a href="{{ route('editorials.edit', $editorial->id) }}" class="btn btn-success">
-                    <i class="fas fa-edit"></i> Editar Editorial
-                </a>
+            <hr>
+            <div class="d-flex text-muted small">
+                <span><i class="fas fa-id-badge mr-1"></i> ID: {{ $editorial->id }}</span>
+                <span class="ml-4"><i class="fas fa-calendar-alt mr-1"></i> Registrada: {{ $editorial->created_at->format('d/m/Y') }}</span>
             </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end">
+            <a href="{{ route('editorials.index') }}" class="btn btn-secondary px-4 shadow-sm mr-2">Volver</a>
+            <a href="{{ route('editorials.edit', $editorial->id) }}" class="btn btn-warning px-4 font-weight-bold shadow-sm text-dark">Editar Datos</a>
         </div>
     </div>
 </div>

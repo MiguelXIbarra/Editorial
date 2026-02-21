@@ -9,22 +9,20 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('autors', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->string('email');
-            $table->string('imagen');
-            $table->string('resenia');
-            $table->integer('estatus');
-            $table->timestamps();
-        });
-    }
+public function up(): void
+{
+    Schema::create('autors', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email');
+        $table->text('description')->nullable();
+        $table->string('image')->nullable();
+        $table->string('video')->nullable();
+        $table->integer('status')->default(1);
+        $table->timestamps();
+    });
+}
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('autors');

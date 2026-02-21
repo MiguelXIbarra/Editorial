@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Editorial;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class EditorialController extends Controller
 {
     public function index()
     {
-        $editorials = Editorial::where('status', 1)->get();
-        return view('editorials.index', ['editorials' => $this->cargarDT($editorials)]);
+        $editorials = Editorial::all();
+        return view('editorials.index', compact('editorials'));
     }
 
     public function create()
@@ -21,78 +20,47 @@ class EditorialController extends Controller
 
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required|min:5',
-            'address' => 'required',
-            'email' => 'required|email'
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email',
+            'address' => 'required'
         ]);
 
-        $editorial = new Editorial();
-        $editorial->name = $request->input('name');
-        $editorial->address = $request->input('address');
-        $editorial->email = $request->input('email');
-        $editorial->status = 1;
-        $editorial->save();
+        Editorial::create($request->all());
+        return redirect()->route('editorials.index')->with('success', 'Editorial creada.');
+}
 
-        return redirect()->route('editorials.index')->with('message', 'Editorial guardada');
-    }
-
-    public function show(string $id)
+    public function show($id)
     {
         $editorial = Editorial::findOrFail($id);
         return view('editorials.show', compact('editorial'));
     }
 
-    public function edit(string $id)
+    public function edit($id)
     {
         $editorial = Editorial::findOrFail($id);
         return view('editorials.edit', compact('editorial'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $this->validate($request, [
-            'name' => 'required|min:5',
-            'address' => 'required',
-            'email' => 'required|email'
+        $editorial = Editorial::findOrFail($id);
+        
+        $request->validate([
+            'name' => 'required|max:255',
+            'email' => 'required|email|unique:editorials,email,' . $id,
+            'address' => 'required'
         ]);
 
-        $editorial = Editorial::findOrFail($id);
-        $editorial->name = $request->input('name');
-        $editorial->address = $request->input('address');
-        $editorial->email = $request->input('email');
-        $editorial->save();
+        $editorial->update($request->all());
 
-        return redirect()->route('editorials.index')->with('message', 'Editorial actualizada');
+        return redirect()->route('editorials.index')->with('success', 'Editorial actualizada.');
     }
 
-    public function deleteEditorial($id)
+    public function destroy($id)
     {
         $editorial = Editorial::findOrFail($id);
-        $editorial->status = 0;
-        $editorial->save();
-        return redirect()->route('editorials.index')->with("message", "Editorial eliminada");
-    }
-
-    private function cargarDT($consulta)
-    {
-        $datos = [];
-        $userRole = Auth::user()->role;
-        foreach ($consulta as $key => $value) {
-            $actualizar = route('editorials.edit', $value['id']);
-            $ver = route('editorials.show', $value['id']);
-
-            $acciones = '
-            <div class="btn-group">
-                <button class="btn btn-sm btn-outline-danger" 
-                        onclick="modal(' . $value['id'] . ', \'' . $value['nombre'] . '\')" 
-                        data-toggle="modal" data-target="#deleteModal">
-                    <i class="far fa-trash-alt"></i>
-                </button>
-            </div>';
-
-            $datos[$key] = [$acciones, $value['id'], $value['email'], $value['name'], $value['address'], $userRole];
-        }
-        return $datos;
+        $editorial->delete();
+        return redirect()->route('editorials.index')->with('success', 'Editorial eliminada.');
     }
 }

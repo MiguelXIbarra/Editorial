@@ -3,32 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Libro extends Model
 {
-    protected $fillable = [
-        'titulo', 
-        'isbn', 
-        'portada', 
-        'autor_id', 
-        'editorial_id', 
-        'status', 
-        'role'
-    ];
+    use HasFactory;
 
-    /**
-     * Relación: Un libro pertenece a un Autor.
-     */
-    public function autor(): BelongsTo
+    protected $table = 'libros';
+
+    protected $fillable = [
+    'titulo',
+    'autor_id',
+    'editorial_id',
+    'portada',
+    'pdf'
+];
+
+    public function autor()
     {
         return $this->belongsTo(Autor::class, 'autor_id');
     }
 
-    /**
-     * Relación: Un libro pertenece a una Editorial.
-     */
-    public function editorial(): BelongsTo
+    public function editorial()
     {
         return $this->belongsTo(Editorial::class, 'editorial_id');
     }

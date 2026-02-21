@@ -1,60 +1,65 @@
 @extends('adminlte::page')
 
-@section('title', 'Inventario de Libros')
+@section('title', 'Listado de Libros')
+
+@section('content_header')
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Listado de Libros</h1>
+    <a href="{{ route('libros.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Libro</a>
+</div>
+@stop
 
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <a href="{{ route('libros.create') }}" class="btn btn-primary btn-sm float-right">Nuevo Libro</a>
-    </div>
-    <div class="card-body">
-        <table class="table table-hover">
-            <thead>
+<div class="card shadow">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="bg-light text-center">
                 <tr>
-                    <th>Acciones</th>
+                    <th style="width: 150px;">Acciones</th>
                     <th>ID</th>
                     <th>Título</th>
                     <th>Autor</th>
                     <th>Editorial</th>
                     <th>Portada</th>
+                    <th>PDF</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-center">
                 @foreach($libros as $libro)
-                <tr>
-                    <td>{!! $libro[0] !!}</td>
-                    <td>{{ $libro[1] }}</td>
-                    <td>{{ $libro[2] }}</td>
-                    <td>{{ $libro[3] }}</td>
-                    <td>{{ $libro[4] }}</td>
-                    <td>{!! $libro[5] !!}</td>
-                </tr>
+                    <tr>
+                        <td class="align-middle">{!! $libro[0] !!}</td>
+                        <td class="align-middle">{{ $libro[1] }}</td>
+                        <td class="align-middle">{{ $libro[2] }}</td>
+                        <td class="align-middle">{{ $libro[3] }}</td>
+                        <td class="align-middle">{{ $libro[4] }}</td>
+                        <td class="align-middle">{!! $libro[5] !!}</td>
+                        <td class="align-middle">{!! $libro[6] !!}</td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
 </div>
 
+{{-- Modal de Eliminación --}}
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-danger">
+            <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title">Eliminar Libro</h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-book-dead fa-3x text-danger mb-3"></i>
-                <p>¿Seguro que deseas eliminar el título?</p>
-                <h4 id="nombreLibro" class="text-danger font-weight-bold"></h4>
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
+            <form id="deleteForm" method="POST">
+                @csrf @method('DELETE')
+                <div class="modal-body text-center">
+                    <p>¿Seguro que quieres eliminar el libro?</p>
+                    <h4 id="nombreLibro" class="font-weight-bold"></h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-danger">Confirmar</button>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -63,10 +68,9 @@
 @section('js')
 <script>
     function modal(id, titulo) {
-        $('#nombreLibro').html(titulo);
+        $('#nombreLibro').text(titulo);
         let url = "{{ route('libros.destroy', ':id') }}";
-        url = url.replace(':id', id);
-        document.getElementById('deleteForm').setAttribute('action', url);
+        $('#deleteForm').attr('action', url.replace(':id', id));
     }
 </script>
 @stop
